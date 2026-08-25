@@ -1,17 +1,36 @@
-import os
-import requests
+name: Linnateater Watcher
 
-url = "https://linnateater.ee/mangukava/"
-html = requests.get(url).text
+on:
+  schedule:
+    - cron: "*/5 * * * *"
 
-TOKEN = os.environ["TELEGRAM_TOKEN"]
-CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+  workflow_dispatch:
 
-if "Osta pilet" in html:
-    requests.post(
-        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        data={
-            "chat_id": CHAT_ID,
-            "text": "🎭 Linnateatri mängukavas leidub müügis pileteid:\nhttps://linnateater.ee/mangukava/"
-        }
-    )
+jobs:
+  watcher:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - run: python check.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Commit state
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add notified.txt
+          git diff --staged --quiet || git commit -m "Update notification state"
+          git push
