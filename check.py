@@ -5,4 +5,4 @@ html = requests.get(
     timeout=30
 ).text
 
-print(html[:15000])
+print(html[15000:30000])
