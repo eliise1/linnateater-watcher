@@ -1,36 +1,46 @@
-name: Linnateater Watcher
+import os
+import requests
 
-on:
-  schedule:
-    - cron: "*/5 * * * *"
+TOKEN = os.environ["TELEGRAM_TOKEN"]
+CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-  workflow_dispatch:
+URL = "https://linnateater.ee/mangukava/"
 
-jobs:
-  watcher:
-    runs-on: ubuntu-latest
+html = requests.get(URL, timeout=30).text
 
-    permissions:
-      contents: write
+if not os.path.exists("notified.txt"):
+    open("notified.txt", "w").close()
 
-    steps:
-      - uses: actions/checkout@v4
+with open("notified.txt", "r", encoding="utf-8") as f:
+    notified = set(line.strip() for line in f if line.strip())
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+matches = []
 
-      - run: pip install -r requirements.txt
+for line in html.splitlines():
+    if "Osta pilet" in line:
+        matches.append(line[:200])
 
-      - run: python check.py
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+new_matches = []
 
-      - name: Commit state
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add notified.txt
-          git diff --staged --quiet || git commit -m "Update notification state"
-          git push
+for match in matches:
+    if match not in notified:
+        new_matches.append(match)
+
+if new_matches:
+    msg = (
+        "🎭 Linnateatri mängukavas on ilmunud saadaval pileteid.\n\n"
+        "Vaata:\nhttps://linnateater.ee/mangukava/"
+    )
+
+    requests.post(
+        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+        data={
+            "chat_id": CHAT_ID,
+            "text": msg
+        },
+        timeout=30
+    )
+
+    with open("notified.txt", "a", encoding="utf-8") as f:
+        for item in new_matches:
+            f.write(item + "\n")
