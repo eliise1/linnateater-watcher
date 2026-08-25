@@ -21,17 +21,15 @@ previous_has_tickets = state.get("has_tickets", False)
 
 if current_has_tickets and not previous_has_tickets:
 
-    msg = (
-        "🎭 Linnateatri mängukavas on saadaval pileteid.\n\n"
-        "Kontrolli järgmise 7 päeva etendusi:\n"
-        "https://linnateater.ee/mangukava/"
-    )
-
     requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         data={
             "chat_id": CHAT_ID,
-            "text": msg
+            "text": (
+                "🎭 Linnateatri mängukavas on saadaval pileteid.\n\n"
+                "Vaata lähemalt:\n"
+                "https://linnateater.ee/mangukava/"
+            )
         },
         timeout=30
     )
