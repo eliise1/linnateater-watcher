@@ -1,18 +1,14 @@
 import requests
+from bs4 import BeautifulSoup
 
 html = requests.get(
     "https://linnateater.ee/mangukava/",
     timeout=30
 ).text
 
-for keyword in ["Osta pilet", "Välja müüdud"]:
-    pos = html.find(keyword)
+soup = BeautifulSoup(html, "html.parser")
 
-    if pos != -1:
-        start = max(0, pos - 1500)
-        end = min(len(html), pos + 2500)
+titles = soup.select(".schedule__session-title")
 
-        print("\n\n====================")
-        print(keyword)
-        print("====================")
-        print(html[start:end])
+for t in titles[:20]:
+    print("ETENDUS:", t.get_text(strip=True))
