@@ -20,7 +20,6 @@ current_has_tickets = "Osta pilet" in html
 previous_has_tickets = state.get("has_tickets", False)
 
 if current_has_tickets and not previous_has_tickets:
-
     requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         data={
