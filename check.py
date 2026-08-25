@@ -5,11 +5,13 @@ html = requests.get(
     timeout=30
 ).text
 
-for keyword in ["Osta pilet", "Välja müüdud", "Annapurna", "Uskuja"]:
+for keyword in ["Osta pilet", "Välja müüdud"]:
     pos = html.find(keyword)
+
     if pos != -1:
-        start = max(0, pos - 500)
-        end = min(len(html), pos + 1000)
+        start = max(0, pos - 1500)
+        end = min(len(html), pos + 2500)
+
         print("\n\n====================")
         print(keyword)
         print("====================")
